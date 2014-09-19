@@ -514,7 +514,7 @@ var GU = {
     },
  'about': function()
     {
-        GU.sendMsg('This broadcast is currently running "Grooveshark Broadcast Bot" v' + GUParams.version + ', created by grooveshark.com/uman42 Updated and Improved for WritheM Radio by grooveshark.com/xandor and grooveshark.com/pironic');
+        GU.sendMsg('This broadcast is currently running "WritheM\'s Broadcast Bot" v' + GUParams.version + ', which is open source! Got a feature or code fix? Submit it to our open repository via pull request at https://github.com/WritheM/GS-Broadcast-Bot');
     },
  'help': function(message, parameter)
     {
