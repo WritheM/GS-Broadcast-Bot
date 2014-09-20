@@ -168,9 +168,10 @@ var GU = {
     {
         // i know this is bad, but i dont care and you can't stop me... for now.
 		if (playlistId == 'WritheM')
+		{
 			Grooveshark.addPlaylistByID(89907476);
 			GU.sendMsg('Loaded the regular rotation into queue. Happy listening!');
-		else {
+		} else {
 			GU.openSidePanel();
 			var playlistToPlay = $('#sidebar-playlists-grid').find("[data-playlist-id='"+playlistId+"']");
 			if (playlistToPlay == null)
