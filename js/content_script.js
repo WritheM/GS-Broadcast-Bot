@@ -805,6 +805,7 @@ actionTable = {
     'removeByName':         [[GU.inBroadcast, GU.guestCheck],           GU.removeByName,         '[FILTER] - Remove all songs that matches the filter. If the filter if empty, remove everything. Use the \'previewRemoveByName\' first.'],
     'showPlaylist':         [[GU.inBroadcast, GU.guestCheck],           GU.showPlaylist,         '[FILTER] - Get the ID of a particular playlist.'],
     'playPlaylist':         [[GU.inBroadcast, GU.guestCheck],           GU.playPlaylist,         'PLAYLISTID - Play the playlist from the ID given by \'showPlaylist\'.'],
+    'playRandom':           [[GU.inBroadcast, GU.guestCheck],           GU.playRandom,           '- Add a random song from the Collection to the queue.'],
     'skip':                 [[GU.inBroadcast, GU.guestCheck],           GU.skip,                 '- Skip the current song.'],
     'shuffle':              [[GU.inBroadcast, GU.guestCheck],           GU.shuffle,              '- Shuffle the current queue.'],
     'peek':                 [[GU.inBroadcast, GU.guestOrWhite],         GU.previewSongs,         '[NUMBER] - Preview the songs that are in the queue.'],
