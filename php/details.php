@@ -21,7 +21,6 @@ Search:
 <br><br>
 <hr>
 <?php  
-  $config['appID'] = '78822J-7YLV343U4W';
 
   if (!$queryIsSet) die();
 
