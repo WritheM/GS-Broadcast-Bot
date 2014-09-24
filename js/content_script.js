@@ -41,6 +41,7 @@ var upvoteCounter = 0;
 var downvoteCounter = 0;
 var currentTimeslot = null;//{Name:"Collection", Message: "Back to the Mix!", StartHour: 15};
 var records = {ListenerCount: 0, SongRecords: { MostUpvoted: '', UpvoteCount: 0, MostDownvoted: '', DownvoteCount: 0}}; 
+var eventSilence = false;
 
 var timeSlots = [];//[{Name:"Collection", Message: "Back to the Mix!", StartHour: 10}, {Name:"Chill", Message: "Time to chill out while the music spills out.", StartHour: 15}, {Name:"Electronic Energy", Message: "Time to take it up a notch!", StartHour: 13}]
 
@@ -101,7 +102,10 @@ var GU = {
     
         var defName = attributes.Description;
         defName = defName.substr(0, defName.indexOf(GUParams.prefixRename)) + GUParams.prefixRename;
-        if (playingRandom)
+        if (eventSilence) {
+            defName += "Event Mode Engaged!";
+        } 
+        else if (playingRandom)
         {
             //defName += 'Playing from collection';
 			defName += "Random Mode Engaged!";
@@ -491,7 +495,7 @@ var GU = {
             GU.renameBroadcast();
         }
         GU.addSongToHistory();
-        if (songleft < 1)
+        if (songleft < 1 && !eventSilence)
             GU.playRandomSong();
 			
         GU.deletePlayedSong();
@@ -523,14 +527,18 @@ var GU = {
     },
  'ping': function(current)
     {
-	   //console.log(current);
-        var userName = $(".user-name[data-user-id='"+current.userID+"']")[0].innerText;
-
-        GU.sendMsg('Pong! Oh, and '+userName+'\'s user ID is ' + current.userID + '!');
+        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        {
+            var userName = $(".user-name[data-user-id='"+current.userID+"']")[0].innerText;
+            GU.sendMsg('Pong! Oh, and '+userName+'\'s user ID is ' + current.userID + '!');
+        }
     },
  'about': function()
     {
-        GU.sendMsg('This broadcast is currently running "WritheM\'s Broadcast Bot" v' + GUParams.version + ', which is open source! Got a feature or code fix? Submit it to our open repository via pull request at https://github.com/WritheM/GS-Broadcast-Bot');
+        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        {
+            GU.sendMsg('This broadcast is currently running "WritheM\'s Broadcast Bot" v' + GUParams.version + ', which is open source! Got a feature or code fix? Submit it to our open repository via pull request at https://github.com/WritheM/GS-Broadcast-Bot');
+        }
     },
  'help': function(message, parameter)
     {
@@ -629,54 +637,63 @@ var GU = {
     },
   'rollDice': function(current)
 	{
-		console.log(current);
-		var numDice = 1;
-		var typeDie = 100;
-		var diceArray = current.data.substr(6).split('d');
-		var capped = false;
-		//console.log(diceArray);
-		if(diceArray && diceArray.length > 1){
-			if(!isNaN(diceArray[0])) numDice = diceArray[0];
-			if(!isNaN(diceArray[1])) typeDie = diceArray[1];
-			if(typeDie > 1000) {
-				typeDie = 1000;
-				capped = true;
-			}
-			if(numDice > 1000) {
-				numDice = 1000;
-				capped = true;
-			}
-			
-		}
-		
-		if(capped) 
-		{
-			GU.sendMsg("Dice Rolls capped to 1000d1000");
-		} else {
-			var diceRoll = 0; 
-			for(var i = 0; i < numDice; i++)
-			{
-				diceRoll += Math.floor((Math.random()*typeDie)+1);
-			}
-			
-			var userName = $(".user-name[data-user-id='"+current.userID+"']")[0].innerText;
-			GU.sendMsg(userName+" rolled a "+diceRoll+".");
-		}
+        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        {
+
+            var numDice = 1;
+            var typeDie = 100;
+            var diceArray = current.data.substr(6).split('d');
+            var capped = false;
+            //console.log(diceArray);
+            if(diceArray && diceArray.length > 1){
+                if(!isNaN(diceArray[0])) numDice = diceArray[0];
+                if(!isNaN(diceArray[1])) typeDie = diceArray[1];
+                if(typeDie > 1000) {
+                    typeDie = 1000;
+                    capped = true;
+                }
+                if(numDice > 1000) {
+                    numDice = 1000;
+                    capped = true;
+                }
+                
+            }
+            
+            if(capped) 
+            {
+                GU.sendMsg("Dice Rolls capped to 1000d1000");
+            } else {
+                var diceRoll = 0; 
+                for(var i = 0; i < numDice; i++)
+                {
+                    diceRoll += Math.floor((Math.random()*typeDie)+1);
+                }
+                
+                var userName = $(".user-name[data-user-id='"+current.userID+"']")[0].innerText;
+                GU.sendMsg(userName+" rolled a "+diceRoll+".");
+            }
+        }
 	},
   'wolframAlpha': function(current)
 	{
-		console.log(current);
-		var msg = current.data.substr(3);
-		$.post(GUParams.WolframPHPUrl+encodeURIComponent(msg),function( data ) {
-			GU.sendMsg(data);
-		});
+        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        {
+            console.log(current);
+            var msg = current.data.substr(3);
+            $.post(GUParams.WolframPHPUrl+encodeURIComponent(msg),function( data ) {
+                GU.sendMsg(data);
+            });
+        }
 	},
   'showRecords': function(current)
 	{
-		GU.sendMsg("Current Records are: ");
-		GU.sendMsg("Peak Audience: "+records.ListenerCount);
-		GU.sendMsg("Most Upvoted Song: "+records.SongRecords.MostUpvoted+" ("+records.SongRecords.UpvoteCount+")");
-		GU.sendMsg("Most Downvoted Song: "+records.SongRecords.MostDownvoted+" ("+records.SongRecords.DownvoteCount+")");
+        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        {
+            GU.sendMsg("Current Records are: ");
+            GU.sendMsg("Peak Audience: "+records.ListenerCount);
+            //GU.sendMsg("Most Upvoted Song: "+records.SongRecords.MostUpvoted+" ("+records.SongRecords.UpvoteCount+")");
+            //GU.sendMsg("Most Downvoted Song: "+records.SongRecords.MostDownvoted+" ("+records.SongRecords.DownvoteCount+")");
+        }
     },
    'startContest': function(current)
 	{
@@ -687,7 +704,9 @@ var GU = {
 			GU.sendMsg("Please Type /ballot to join the Contest!");
 			contestStatus = true;
 			contestUsers = [];
-		} else {
+		} 
+        else if (!eventSilence)
+        {
 			GU.sendMsg("You do not have permission to do this.");
 		}
 
@@ -706,7 +725,7 @@ var GU = {
 				GU.sendMsg("...And the winner is "+contestWinner+"! Congratulations!");
 			}, 4000);
 			contestStatus = false;
-		} else {
+		} else if (!eventSilence) {
 			GU.sendMsg("You do not have permission to do this.");
 		}
 	},
@@ -722,7 +741,7 @@ var GU = {
 				if(contestUsers.indexOf(userID) == -1) contestUsers.push(userID);
 				console.log(contestUsers);
 			}
-		} else {
+		} else if (!eventSilence) {
 			GU.sendMsg("There is no contest running currently.");
 		}
    },
@@ -731,6 +750,16 @@ var GU = {
 		var msg = current.data.substr(12);
 		GUParams.ShoutOutMessage = msg;
 		GU.sendMsg("Shoutout set to: '"+msg+"'");
+   },
+   'toggleEvent': function(current)
+   {
+        if (eventSilence) {
+            eventSilence = false;
+            GU.sendMsg("Event Mode has been disabled. Welcome back!");
+        } else {
+            eventSilence = true;
+            GU.sendMsg("Event Mode has been enabled. Only select commands will be available during the event.");
+        }
    }
 };
 
@@ -783,13 +812,14 @@ actionTable = {
     'makeGuest':            [[GU.inBroadcast, GU.strictWhiteListCheck], GU.makeGuest,            'USERID - Force-guest a user with its ID.'],
     'unguestAll':           [[GU.inBroadcast, GU.strictWhiteListCheck], GU.unguestAll,           '- Unguest everyone.'],
     'about':                [[GU.inBroadcast],                          GU.about,                '- About this software.'],
-	'roll':                 [[GU.inBroadcast],                          GU.rollDice,             '- Roll a d100.'],
-	'wa':                   [[GU.inBroadcast],                          GU.wolframAlpha,         '- Ask Wolfram|Alpha a question.'],
-	'records':              [[GU.inBroadcast],                          GU.showRecords,          '- shows the Broadcasts Record Information'],
-	'startContest':			[[GU.inBroadcast, GU.guestOrWhite],			GU.startContest,		 '- starts a Contest'], 
-	'ballot':				[[GU.inBroadcast],							GU.ballot,		 		 '- enter yourself into a currently running contest'], 
-	'endContest':			[[GU.inBroadcast, GU.guestOrWhite],			GU.endContest,		 	 '- ends a Contest'],
-    'setShoutout':          [[GU.inBroadcast, GU.guestOrWhite],         GU.setShoutout,          '- sets the Shoutout for the Broadcast'] 	
+    'roll':                 [[GU.inBroadcast],                          GU.rollDice,             '- Roll a d100.'],
+    'wa':                   [[GU.inBroadcast],                          GU.wolframAlpha,         '- Ask Wolfram|Alpha a question.'],
+    'records':              [[GU.inBroadcast],                          GU.showRecords,          '- shows the Broadcasts Record Information'],
+    'startContest':			[[GU.inBroadcast, GU.guestOrWhite],			GU.startContest,		 '- starts a Contest'], 
+    'ballot':				[[GU.inBroadcast],							GU.ballot,		 		 '- enter yourself into a currently running contest'], 
+    'endContest':			[[GU.inBroadcast, GU.guestOrWhite],         GU.endContest,		 	 '- ends a Contest'],
+    'setShoutout':          [[GU.inBroadcast, GU.guestOrWhite],         GU.setShoutout,          '- sets the Shoutout for the Broadcast'],
+    'eventSilence':         [[GU.inBroadcast, GU.guestOrWhite],        GU.toggleEvent,          '- will toggle the event mode. When enabled the random song selector will be disbaled and things like /roll and /wa will be silenced.'] 	
 };
 
 (function()
