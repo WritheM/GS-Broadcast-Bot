@@ -305,6 +305,21 @@ var GU = {
             GS.Services.SWF.removeSongs(allID);
         }
     },
+ 'clearQueue': function(message)
+    {
+        var songs = GS.Services.SWF.getCurrentQueue().songs;
+        var currentID = GS.Services.SWF.getCurrentQueue().activeSong.queueSongID;
+        var allID = [];
+        songs.forEach(function(song) {
+            var id = song.queueSongID;
+            if (id != currentID)
+                allID.push(id);
+        });
+        if (allID.length > 0)
+        {
+            GS.Services.SWF.removeSongs(allID);
+        }
+    },
  'getMatchedSongsList': function(stringFilter)
     {
         var regex = RegExp(stringFilter, 'i');
@@ -754,8 +769,9 @@ actionTable = {
     'removeFromCollection': [[GU.inBroadcast, GU.strictWhiteListCheck], GU.removeFromCollection, '- Remove this song from the collection.'],
     'removeNext':           [[GU.inBroadcast, GU.guestCheck],           GU.removeNextSong,       '- Remove the next song in the queue.'],
     'removeLast':           [[GU.inBroadcast, GU.guestCheck],           GU.removeLastSong,       '[NUMBER] - Remove the last song of the queue.'],
+    'clearQueue':           [[GU.inBroadcast, GU.strictWhiteListCheck], GU.clearQueue,       '- Remove every song in the queue after the currently playing song.'],
     'fetchByName':          [[GU.inBroadcast, GU.guestCheck],           GU.fetchByName,          '[FILTER] - Place the first song of the queue that matches FILTER at the beginning of the queue.'],
-    'fetchLast':            [[GU.inBroadcast, GU.guestCheck],           GU.fetchLast,            '- Bring the last song at the beginning of the queue.'],
+    'fetchLast':            [[GU.inBroadcast, GU.guestCheck],           GU.fetchLast,            '- Bring the last song in the queue to the beginning.'],
     'previewRemoveByName':  [[GU.inBroadcast, GU.guestCheck],           GU.previewRemoveByName,  '[FILTER] - Get the list of songs that will be remove when calling \'removeByName\' with the same FILTER.'],
     'removeByName':         [[GU.inBroadcast, GU.guestCheck],           GU.removeByName,         '[FILTER] - Remove all songs that matches the filter. If the filter if empty, remove everything. Use the \'previewRemoveByName\' first.'],
     'showPlaylist':         [[GU.inBroadcast, GU.guestCheck],           GU.showPlaylist,         '[FILTER] - Get the ID of a particular playlist.'],
