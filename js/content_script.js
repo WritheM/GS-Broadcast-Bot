@@ -42,6 +42,11 @@ var downvoteCounter = 0;
 var currentTimeslot = null;//{Name:"Collection", Message: "Back to the Mix!", StartHour: 15};
 var records = {ListenerCount: 0, SongRecords: { MostUpvoted: '', UpvoteCount: 0, MostDownvoted: '', DownvoteCount: 0}}; 
 var eventSilence = false;
+// Chat Handlers, See below
+var chatHandlers;
+var chatStats = {lastChatId: 0, lastChatTime = null};
+// Holds onto the last shoutout timeout id.
+var shoutoutTimeoutId = null;
 
 var timeSlots = [];//[{Name:"Collection", Message: "Back to the Mix!", StartHour: 10}, {Name:"Chill", Message: "Time to chill out while the music spills out.", StartHour: 15}, {Name:"Electronic Energy", Message: "Time to take it up a notch!", StartHour: 13}]
 
@@ -432,7 +437,12 @@ var GU = {
         }
         return true;    
     },
- 'doParseMessage': function(current)
+ 'trackChatStats': function(current)
+    {
+        chatStats.lastChatTime = new Date(); // Now
+        chatStats.lastChatId = current.userID;
+    },
+ 'doChatAction': function(current)
     {
         var string = current.data;
         var regexp = RegExp('^/([a-zA-Z]*)([ ]+([a-zA-Z0-9 ]+))?$');
@@ -441,7 +451,37 @@ var GU = {
         {
             var currentAction = actionTable[regResult[1]];
             if (currentAction instanceof Array && currentAction[0].every(function(element){return element(current.userID);}))
+            {
                 currentAction[1](current, regResult[3]);
+                return true;
+            }
+        }
+        
+        return false;
+    },
+ 'doParseMessage': function(current)
+    {
+        var userID = current.userID;
+        var message = current.data;
+        
+        if (!chatHandlers || !((chatHandlers.runAlways || chatHandlers.handleOnce))
+        {
+            console.log('Unable to parse message, no chat handlers registered.');
+            return;
+        }
+        
+        if (chatHandlers.runAlways) 
+        {
+            chatHandlers.runAlways.forEach(function(handler, index) {
+                handler(current);
+            });
+        }
+        
+        if (chatHandlers.handleOnce)
+        {
+            chatHandlers.handleOnce.every(function(handler, index) {
+                return !handler(current); // Return true to continue, false to stop!
+            });
         }
     },
  'forcePlay': function()
@@ -745,6 +785,44 @@ var GU = {
 			GU.sendMsg("There is no contest running currently.");
 		}
    },
+   'scheduleShoutout': function() 
+   {
+        if (null !== shoutoutTimeoutId) {
+            // We've got a timeout scheduled already, let's clear it.
+            clearTimeout(shoutoutTimeoutId);
+        }
+        
+        var shoutOutInterval = GUParams.ShoutOutInterval * 1000 * 60; // Conversion from minutes -> milliseconds
+        
+        // Schedule a single timeout
+        setTimeout(GU.doShoutout, shoutOutInterval);
+   },
+   'doShoutout': function() 
+   {
+        // The timeout has executed, we don't need the handle anymore.
+        shoutoutTimeoutId = null;
+        
+        var timeSinceLastChat = ((new Date() - chatStats.lastChatTime) / 1000) / 60); // In minutes
+        if (chatStats.lastChatId === GS.getLoggedInUserID() && 
+            Math.abs(timeSinceLastChat - GUParams.ShoutOutInterval) > 2) {
+            // Broadcaster was the last to chat, and it was within +2/-2 minutes of the last
+            // shoutout interval.
+            
+            // This is important because we wouldn't want someone's command response
+            // to trip this and prevent the shoutout.
+            
+            GU.scheduleShoutout();
+            return;
+        }
+        
+        var message = GUParams.ShoutOutMessage;
+        if (message && message.trim().length) {
+            GU.sendMsg(message);
+        }
+        
+        // Reschedule ourselves
+        GU.scheduleShoutout();
+   },
    'setShoutout': function(current)
    {
 		var msg = current.data.substr(12);
@@ -790,6 +868,18 @@ var clearIntv = setInterval(function(){
 	}
 }, 1000);
 
+chatHandlers = {
+    // Will run all these handlers each time a message is recieved
+    // Warning: this could get slow if you do a lot here
+    runAlways: [
+        GU.trackChatStats
+    ],
+    // Will attempt to run all these handlers, but the first one to return
+    // true (for handled) will break execution.
+    handleOnce: [
+        GU.doChatAction
+    ]
+};
 
 actionTable = {
     'help':                 [[GU.inBroadcast],                          GU.help,                 '- Display this help.'],
@@ -850,12 +940,9 @@ actionTable = {
 		timeSlots = JSON.parse(GUParams.Timeslot_Array) != undefined ? JSON.parse(GUParams.Timeslot_Array) : timeSlots;
 		
 		if(success){
-			var shoutOutInterval = ((GUParams.ShoutOutInterval*1000)*60);		
-			setInterval(function() {
-				var shoutOutMessage = GUParams.ShoutOutMessage;
-				if(shoutOutMessage && shoutOutMessage.trim().length)
-					GU.sendMsg(shoutOutMessage);
-			}, shoutOutInterval);
+            // Use a self-scheduling technique so we can update the length
+            // without breaking stuff.
+            GU.scheduleShoutout();
 		}
     }
     init_check();
