@@ -44,7 +44,7 @@ var records = {ListenerCount: 0, SongRecords: { MostUpvoted: '', UpvoteCount: 0,
 var eventSilence = false;
 // Chat Handlers, See below
 var chatHandlers;
-var chatStats = {lastChatId: 0, lastChatTime = null};
+var chatStats = {lastChatId: 0, lastChatTime: null};
 // Holds onto the last shoutout timeout id.
 var shoutoutTimeoutId = null;
 
@@ -464,7 +464,7 @@ var GU = {
         var userID = current.userID;
         var message = current.data;
         
-        if (!chatHandlers || !((chatHandlers.runAlways || chatHandlers.handleOnce))
+        if (!chatHandlers || !((chatHandlers.runAlways || chatHandlers.handleOnce)))
         {
             console.log('Unable to parse message, no chat handlers registered.');
             return;
@@ -802,9 +802,9 @@ var GU = {
         // The timeout has executed, we don't need the handle anymore.
         shoutoutTimeoutId = null;
         
-        var timeSinceLastChat = ((new Date() - chatStats.lastChatTime) / 1000) / 60); // In minutes
+        var timeSinceLastChat = (((new Date() - chatStats.lastChatTime) / 1000) / 60); // In minutes
         if (chatStats.lastChatId === GS.getLoggedInUserID() && 
-            Math.abs(timeSinceLastChat - GUParams.ShoutOutInterval) > 2) {
+            Math.abs(timeSinceLastChat - GUParams.ShoutOutInterval) < 2) {
             // Broadcaster was the last to chat, and it was within +2/-2 minutes of the last
             // shoutout interval.
             
