@@ -842,14 +842,10 @@ var GU = {
    },
    'handleVoteHistory': function(broadcast, vote)
    {
-        var downCount = parseInt($(".downvotes").html());
-        var upCount = parseInt($(".upvotes").html());
         var song = GS.Services.SWF.getCurrentQueue().activeSong;
-        
+        var downCount = song.broadcastDownVotes;
+        var upCount = song.broadcastUpVotes;
         var totalCount = upCount - downCount;
-        console.log("votes are calculated to be at: "+totalCount);
-
-        console.log(vote);
         
         //{ListenerCount: {Count : 0, Date : 0} , Upvoted: { Title: '', Count: 0, Date: 0}, Downvoted: { Title: '', Count: 0, Date: 0}}; 
         if(records.Upvoted.Count < totalCount) {
@@ -869,9 +865,6 @@ var GU = {
             records.Downvoted.Date = (new Date).getTime();
             localStorage.setItem("GS_BC_RECORDS", JSON.stringify(records));
         }
-
-        //console.log(records);
-
    },
    'handleListenerHistory': function(broadcast,listener)
    {
