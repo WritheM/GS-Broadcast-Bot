@@ -54,6 +54,7 @@ var defValue = [
 	['ShoutOutInterval', 'The interval of your shoutout message, the message will be sent once every x minutes.', '50'],
 	['ShoutOutMessage', 'The message to send for your shoutout -- If blank no shoutout will be used', ''],
 	['WolframPHPUrl', 'The plugin comes with a php script, this is the location of the webserver that hosts that php.', ''],
+	['announceRecordBreaking', 'Should we announce every time we break a record? This could get really annoying if you have a new bot in a big broadcast for the first time.', false],
 ];
 
 var content = document.getElementById('content');
