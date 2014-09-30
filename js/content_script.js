@@ -444,9 +444,12 @@ var GU = {
     },
  'doChatAction': function(current)
     {
+        console.log("doChatAction called");
+        console.log(current);
         var string = current.data;
-        var regexp = RegExp('^/([a-zA-Z]*)([ ]+([a-zA-Z0-9 ]+))?$');
+        var regexp = RegExp('^/([a-zA-Z]*)([ ]+([a-zA-Z0-9 \/~!@$%^*()\-+:<>?§þπτΔ&\.\?=]+))?$');
         var regResult = regexp.exec(string);
+        console.log(regResult);
         if (regResult != null)
         {
             var currentAction = actionTable[regResult[1]];
