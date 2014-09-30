@@ -391,7 +391,8 @@ var GU = {
     {
         if (!GU.isGuesting(userid))
         {
-            GU.sendMsg('Only Guests can use that feature, sorry!');
+            if (!eventSilence)
+                GU.sendMsg('Only Guests can use that feature, sorry!');
             return false;        
         }
         return true;    
@@ -404,13 +405,6 @@ var GU = {
     {
         return followingList.indexOf(userid) != -1;
     },
- 'strictWhiteListCheck': function(userid)
-    {
-        if (GU.inListCheck(userid, GUParams.whitelist))
-            return true;
-        GU.sendMsg('Only user that are explicitly in the whitelist can use this feature, sorry!');
-        return false;
-    },
  'whiteListCheck': function(userid)
     {
         if (GU.inListCheck(userid, GUParams.whitelist)) // user in whitelist
@@ -421,7 +415,8 @@ var GU = {
         {
             return true;
         }
-        GU.sendMsg('Only ' + GUParams.whiteListName + ' can use that feature, sorry!');        
+        if (!eventSilence)
+            GU.sendMsg('Only ' + GUParams.whiteListName + '\'s can use that feature, sorry!');        
         return false;
     },
  'guestOrWhite': function(userid)
@@ -432,7 +427,8 @@ var GU = {
     {
         if (userid != GS.getCurrentBroadcast().attributes.UserID)
         {
-            GU.sendMsg('Only the Master can use that feature, sorry!');
+            if (!eventSilence)
+                GU.sendMsg('Only the Master can use that feature, sorry!');
             return false;
         }
         return true;    
@@ -444,12 +440,9 @@ var GU = {
     },
  'doChatAction': function(current)
     {
-        console.log("doChatAction called");
-        console.log(current);
         var string = current.data;
         var regexp = RegExp('^/([a-zA-Z]*)([ ]+([a-zA-Z0-9 \/~!@$%^*()\-+:<>?§þπτΔ&\.\?=]+))?$');
         var regResult = regexp.exec(string);
-        console.log(regResult);
         if (regResult != null)
         {
             var currentAction = actionTable[regResult[1]];
@@ -570,15 +563,29 @@ var GU = {
     },
  'ping': function(current)
     {
-        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        var userID = current.userID;
+        if (!eventSilence || GU.guestOrWhite(userID)) // is guest
         {
-            var userName = $(".user-name[data-user-id='"+current.userID+"']")[0].innerText;
-            GU.sendMsg('Pong! Oh, and '+userName+'\'s user ID is ' + current.userID + '!');
+            var userName = $(".user-name[data-user-id='"+userID+"']")[0].innerText;
+            
+            var strAccess = " isListener";
+            if (GU.inListCheck(userID, GUParams.blacklist))
+                strAccess += ", isBlack"
+            if (userID == GS.getCurrentBroadcast().attributes.UserID)
+                strAccess += ", isBroadcaster";
+            if (GU.isGuesting(userID))
+                strAccess += ", isGuest";
+            if (GU.inListCheck(userID, GUParams.whitelist))
+                strAccess += ", isWhite"
+            if (GUParams.whitelistIncludesFollowing.toString() === 'true' && GU.followerCheck(userID))
+                strAccess += ", is" + GUParams.whiteListName
+            
+            GU.sendMsg('Pong! '+userName+'\'s user ID is ' + userID + ' and you have the following permissions: ' + strAccess + '.');
         }
     },
  'about': function()
     {
-        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        if (!eventSilence || GU.guestOrWhite(userID)) // is guest
         {
             GU.sendMsg('This broadcast is currently running "WritheM\'s Broadcast Bot" v' + GUParams.version + ', which is open source! Got a feature or code fix? Submit it to our open repository via pull request at https://github.com/WritheM/GS-Broadcast-Bot');
         }
@@ -887,11 +894,11 @@ chatHandlers = {
 actionTable = {
     'help':                 [[GU.inBroadcast],                          GU.help,                 '- Display this help.'],
     'ping':                 [[GU.inBroadcast],                          GU.ping,                 '- Ping the BOT, also prints your USERID.'],
-    'addToCollection':      [[GU.inBroadcast, GU.strictWhiteListCheck], GU.addToCollection,      '- Add this song to the collection.'],
-    'removeFromCollection': [[GU.inBroadcast, GU.strictWhiteListCheck], GU.removeFromCollection, '- Remove this song from the collection.'],
+    'addToCollection':      [[GU.inBroadcast, GU.whiteListCheck],       GU.addToCollection,      '- Add this song to the collection.'],
+    'removeFromCollection': [[GU.inBroadcast, GU.whiteListCheck],       GU.removeFromCollection, '- Remove this song from the collection.'],
     'removeNext':           [[GU.inBroadcast, GU.guestCheck],           GU.removeNextSong,       '- Remove the next song in the queue.'],
     'removeLast':           [[GU.inBroadcast, GU.guestCheck],           GU.removeLastSong,       '[NUMBER] - Remove the last song of the queue.'],
-    'clearQueue':           [[GU.inBroadcast, GU.strictWhiteListCheck], GU.clearQueue,       '- Remove every song in the queue after the currently playing song.'],
+    'clearQueue':           [[GU.inBroadcast, GU.whiteListCheck],       GU.clearQueue,       '- Remove every song in the queue after the currently playing song.'],
     'fetchByName':          [[GU.inBroadcast, GU.guestCheck],           GU.fetchByName,          '[FILTER] - Place the first song of the queue that matches FILTER at the beginning of the queue.'],
     'fetchLast':            [[GU.inBroadcast, GU.guestCheck],           GU.fetchLast,            '- Bring the last song in the queue to the beginning.'],
     'previewRemoveByName':  [[GU.inBroadcast, GU.guestCheck],           GU.previewRemoveByName,  '[FILTER] - Get the list of songs that will be remove when calling \'removeByName\' with the same FILTER.'],
@@ -903,8 +910,8 @@ actionTable = {
     'shuffle':              [[GU.inBroadcast, GU.guestCheck],           GU.shuffle,              '- Shuffle the current queue.'],
     'peek':                 [[GU.inBroadcast, GU.guestOrWhite],         GU.previewSongs,         '[NUMBER] - Preview the songs that are in the queue.'],
     'guest':                [[GU.inBroadcast, GU.guestOrWhite],         GU.guest,                '- Toogle your guest status.'],
-    'makeGuest':            [[GU.inBroadcast, GU.strictWhiteListCheck], GU.makeGuest,            'USERID - Force-guest a user with its ID.'],
-    'unguestAll':           [[GU.inBroadcast, GU.strictWhiteListCheck], GU.unguestAll,           '- Unguest everyone.'],
+    'makeGuest':            [[GU.inBroadcast, GU.whiteListCheck],       GU.makeGuest,            'USERID - Force-guest a user with its ID.'],
+    'unguestAll':           [[GU.inBroadcast, GU.whiteListCheck],       GU.unguestAll,           '- Unguest everyone.'],
     'about':                [[GU.inBroadcast],                          GU.about,                '- About this software.'],
     'roll':                 [[GU.inBroadcast],                          GU.rollDice,             '- Roll a d100.'],
     'wa':                   [[GU.inBroadcast],                          GU.wolframAlpha,         '- Ask Wolfram|Alpha a question.'],
