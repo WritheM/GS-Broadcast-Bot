@@ -918,13 +918,13 @@ actionTable = {
     'unguestAll':           [[GU.inBroadcast, GU.whiteListCheck],       GU.unguestAll,           '- Unguest everyone.'],
     'about':                [[GU.inBroadcast],                          GU.about,                '- About this software.'],
     'roll':                 [[GU.inBroadcast],                          GU.rollDice,             '- Roll a d100.'],
-    'wa':                   [[GU.inBroadcast, GUParams.WolframPHPUrl.length > 0], GU.wolframAlpha, '- Ask Wolfram|Alpha a question.'],
+    'wa':                   [[GU.inBroadcast],                          GU.wolframAlpha,         '- Ask Wolfram|Alpha a question.'],
     'records':              [[GU.inBroadcast],                          GU.showRecords,          '- shows the Broadcasts Record Information'],
-    'startContest':			[[GU.inBroadcast, GU.guestOrWhite],			GU.startContest,		 '- starts a Contest'], 
-    'ballot':				[[GU.inBroadcast],							GU.ballot,		 		 '- enter yourself into a currently running contest'], 
-    'endContest':			[[GU.inBroadcast, GU.guestOrWhite],         GU.endContest,		 	 '- ends a Contest'],
+    'startContest':         [[GU.inBroadcast, GU.guestOrWhite],	        GU.startContest,         '- starts a Contest'], 
+    'ballot':               [[GU.inBroadcast],                          GU.ballot,               '- enter yourself into a currently running contest'], 
+    'endContest':           [[GU.inBroadcast, GU.guestOrWhite],         GU.endContest,           '- ends a Contest'],
     'setShoutout':          [[GU.inBroadcast, GU.guestOrWhite],         GU.setShoutout,          '- sets the Shoutout for the Broadcast'],
-    'eventSilence':         [[GU.inBroadcast, GU.guestOrWhite],        GU.toggleEvent,          '- will toggle the event mode. When enabled the random song selector will be disbaled and things like /roll and /wa will be silenced.'] 	
+    'eventSilence':         [[GU.inBroadcast, GU.guestOrWhite],         GU.toggleEvent,          '- will toggle the event mode. When enabled the random song selector will be disbaled and things like /roll and /wa will be silenced.'] 	
 };
 
 (function()
