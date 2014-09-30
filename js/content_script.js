@@ -849,7 +849,7 @@ var GU = {
         
         //{ListenerCount: {Count : 0, Date : 0} , Upvoted: { Title: '', Count: 0, Date: 0}, Downvoted: { Title: '', Count: 0, Date: 0}}; 
         if(records.Upvoted.Count < totalCount) {
-            if (!eventSilence && GUParams.announceRecordBreaking)
+            if (!eventSilence && GUParams.announceRecordBreaking.toString() === 'true')
                 GU.sendMsg("Congrats everyone. This song is now the highest rated song ever! The previous record holder was '"+records.Upvoted.Title+"' which had a total of "+records.Upvoted.Count+", and was set on "+(new Date(records.Upvoted.Date)).toDateString()+". You can see all of our records by typing /records");
             records.Upvoted.Title = song.SongName + " by " + song.ArtistName;
             records.Upvoted.Count = totalCount;
@@ -858,7 +858,7 @@ var GU = {
         }
 
         if(records.Downvoted.Count > totalCount) {
-            if (!eventSilence && GUParams.announceRecordBreaking)
+            if (!eventSilence && GUParams.announceRecordBreaking.toString() === 'true')
                 GU.sendMsg("Congrats everyone. This song is now the lowest rated song ever! The previous record holder was '"+records.Downvoted.Title+"' which had a total of "+records.Downvoted.Count+", and was set on "+(new Date(records.Downvoted.Date)).toDateString()+". You can see all of our records by typing /records");
             records.Downvoted.Title = song.SongName + " by " + song.ArtistName;
             records.Downvoted.Count = totalCount;
@@ -872,7 +872,7 @@ var GU = {
 
         //{ListenerCount: {Count : 0, Date : 0} , Upvoted: { Title: '', Count: 0, Date: 0}, Downvoted: { Title: '', Count: 0, Date: 0}}; 
         if(records.ListenerCount.Count < listeners) {
-            if (!eventSilence && GUParams.announceRecordBreaking)
+            if (!eventSilence && GUParams.announceRecordBreaking.toString() === 'true')
                 GU.sendMsg("Congrats everyone! This is now the most listeners we've had since the record was set on "+(new Date(records.Upvoted.Date)).toDateString()+". You can see all of our records by typing /records");
             records.ListenerCount.Count = listeners;
             records.ListenerCount.Date = (new Date).getTime();
