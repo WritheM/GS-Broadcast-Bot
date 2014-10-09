@@ -372,11 +372,35 @@ var GU = {
         if (songToPlay.length > 0)
             GS.Services.SWF.moveSongsTo([songToPlay[0].queueSongID], 1, true);
     },
- 'fetchLast': function(message, stringFilter)
+ 'fetchLast': function(message, input)
     {
+        var invert = false;
+        var songsToFetch = 1;
+        
+        var match = /(\!)?([\d]+)/.exec(input);
+        if (match) {
+            invert = match[1] == '!';
+            songsToFetch = parseInt(match[2]);
+        }
+        
         var songList = GS.Services.SWF.getCurrentQueue().songs;
-        if (songList.length > 2)
-            GS.Services.SWF.moveSongsTo([songList[songList.length - 1].queueSongID], 1, true);
+        
+        // Our song list needs to have enough songs past the current
+        if (songList.length <= (songsToFetch + 1)) {
+            console.log('Warning: Requested ' + songsToFetch + ' songs, but only ' + songList.length + ' were available.');
+            return;
+        } 
+        
+        var songIdsToFetch = [];
+        for(var i = songList.length - songsToFetch; i < songList.length; i++) {
+            songIdsToFetch.push(songList[i].queueSongID);
+        }
+        
+        if (invert) {
+            songIdsToFetch.reverse();
+        }
+        
+        GS.Services.SWF.moveSongsTo(songIdsToFetch, 1, true);
     },
  'shuffle': function()
     {
