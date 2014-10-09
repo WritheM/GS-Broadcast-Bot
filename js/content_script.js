@@ -441,7 +441,7 @@ var GU = {
  'doChatAction': function(current)
     {
         var string = current.data;
-        var regexp = RegExp('^/([a-zA-Z]*)([ ]+([a-zA-Z0-9 \/~!@$%^*()\-+:<>?§þπτΔ&\.\?=]+))?$');
+        var regexp = RegExp('^/([a-zA-Z]*)([ ]+([a-zA-Z0-9 \\\\/~!@$%^*\\(\\)\\-+:<>§þπτΔ&\\.\\?=]+))?$');
         var regResult = regexp.exec(string);
         if (regResult != null)
         {
