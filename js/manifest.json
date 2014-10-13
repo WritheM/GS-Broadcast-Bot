@@ -16,6 +16,6 @@
    "permissions": [ "alarms", "tabs", "http://grooveshark.com/*" ],
    "short_name": "GS Bot",
    "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "1.8.2",
+   "version": "1.8.5",
    "web_accessible_resources": [ "content_script.js" ]
 }

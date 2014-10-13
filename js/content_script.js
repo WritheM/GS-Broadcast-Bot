@@ -3,6 +3,7 @@
  *
  *  Copyright (c) 2014 Ulysse Manceron
  *
+ *  Edited By: Michael Writhe, 2014
  *	Edited By: Mike Gleeson, 2014
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -37,10 +38,8 @@ var lastPlay;
 var forcePlay = false;
 var playingRandom = false;
 var followingList = [];
-var upvoteCounter = 0;
-var downvoteCounter = 0;
 var currentTimeslot = null;//{Name:"Collection", Message: "Back to the Mix!", StartHour: 15};
-var records = {ListenerCount: 0, SongRecords: { MostUpvoted: '', UpvoteCount: 0, MostDownvoted: '', DownvoteCount: 0}}; 
+var records = {ListenerCount: {Count : 0, Date : 0} , Upvoted: { Title: '', Count: 0, Date: 0}, Downvoted: { Title: '', Count: 0, Date: 0}, version:1};
 var eventSilence = false;
 // Chat Handlers, See below
 var chatHandlers;
@@ -270,19 +269,6 @@ var GU = {
 					GU.setTimeslot(_TIMESLOT_);
 				}
 			}
-
-			if(records.SongRecords.UpvoteCount < upvoteCounter) {
-				records.SongRecords.MostUpvoted = songName + " by " + artistName;
-				records.SongRecords.UpvoteCount = currentUpvotes;
-				localStorage.setItem("GS_BC_RECORDS", JSON.stringify(records));
-			}
-
-			if(records.SongRecords.DownvoteCount < downvoteCounter) {
-				records.SongRecords.MostDownvoted = songName + " by " + artistName;
-				records.SongRecords.DownvoteCount = currentDownvotes;
-				localStorage.setItem("GS_BC_RECORDS", JSON.stringify(records));
-			}
-			//console.log(records);
 		}
     },
  'removeNextSong': function()
@@ -653,6 +639,10 @@ var GU = {
         GS.Services.SWF.handleBroadcastChat = function(e, t){handleBroadcastSaved(e,t);GU.doParseMessage(t);};
         var handleQueueChange = GS.Services.SWF.queueChange;
         GS.Services.SWF.queueChange = function(e){handleQueueChange(e);GU.queueChange();};
+        var handleVotes = GS.Services.SWF.handleBroadcastActiveSongVote;
+        GS.Services.SWF.handleBroadcastActiveSongVote = function(e,t){handleVotes(e,t);GU.handleVoteHistory(e,t);};
+        var handleListenerJoin = GS.Services.SWF.handleBroadcastListenerJoined;
+        GS.Services.SWF.handleBroadcastListenerJoined = function(e,t){handleListenerJoin(e,t);GU.handleListenerHistory(e,t);};
     },
  'updateFollowing': function()
     {
@@ -726,7 +716,8 @@ var GU = {
 	},
   'wolframAlpha': function(current)
 	{
-        if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
+        if (GUParams.WolframPHPUrl.length > 0  
+            && (!eventSilence || GU.guestOrWhite(current.userID))) // is guest
         {
             console.log(current);
             var msg = current.data.substr(3);
@@ -740,9 +731,9 @@ var GU = {
         if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
         {
             GU.sendMsg("Current Records are: ");
-            GU.sendMsg("Peak Audience: "+records.ListenerCount);
-            //GU.sendMsg("Most Upvoted Song: "+records.SongRecords.MostUpvoted+" ("+records.SongRecords.UpvoteCount+")");
-            //GU.sendMsg("Most Downvoted Song: "+records.SongRecords.MostDownvoted+" ("+records.SongRecords.DownvoteCount+")");
+            GU.sendMsg("Peak Audience: "+records.ListenerCount.Count+" Set On "+(new Date(records.ListenerCount.Date)).toDateString());
+            GU.sendMsg("Most Upvoted Song: "+records.Upvoted.Title+" ("+records.Upvoted.Count+") Set on "+(new Date(records.Upvoted.Date)).toDateString());
+            GU.sendMsg("Most Downvoted Song: "+records.Downvoted.Title+" ("+records.Downvoted.Count+") Set on "+(new Date(records.Downvoted.Date)).toDateString());
         }
     },
    'startContest': function(current)
@@ -848,35 +839,51 @@ var GU = {
             eventSilence = true;
             GU.sendMsg("Event Mode has been enabled. Only select commands will be available during the event.");
         }
+   },
+   'handleVoteHistory': function(broadcast, vote)
+   {
+        var song = GS.Services.SWF.getCurrentQueue().activeSong;
+        var downCount = song.broadcastDownVotes;
+        var upCount = song.broadcastUpVotes;
+        var totalCount = upCount - downCount;
+        
+        //{ListenerCount: {Count : 0, Date : 0} , Upvoted: { Title: '', Count: 0, Date: 0}, Downvoted: { Title: '', Count: 0, Date: 0}}; 
+        if(records.Upvoted.Count < totalCount) {
+            if (!eventSilence && GUParams.announceRecordBreaking.toString() === 'true'
+                && song.SongName + " by " + song.ArtistName != records.Upvoted.Title)
+                GU.sendMsg("Congrats everyone. This song is now the highest rated song ever! The previous record holder was '"+records.Upvoted.Title+"' which had a total of "+records.Upvoted.Count+", and was set on "+(new Date(records.Upvoted.Date)).toDateString()+". You can see all of our records by typing /records");
+            records.Upvoted.Title = song.SongName + " by " + song.ArtistName;
+            records.Upvoted.Count = totalCount;
+            records.Upvoted.Date = (new Date).getTime();
+            localStorage.setItem("GS_BC_RECORDS", JSON.stringify(records));
+        }
+
+        if(records.Downvoted.Count > totalCount) {
+            if (!eventSilence && GUParams.announceRecordBreaking.toString() === 'true'
+                && song.SongName + " by " + song.ArtistName != records.Downvoted.Title)
+                GU.sendMsg("Congrats everyone. This song is now the lowest rated song ever! The previous record holder was '"+records.Downvoted.Title+"' which had a total of "+records.Downvoted.Count+", and was set on "+(new Date(records.Downvoted.Date)).toDateString()+". You can see all of our records by typing /records");
+            records.Downvoted.Title = song.SongName + " by " + song.ArtistName;
+            records.Downvoted.Count = totalCount;
+            records.Downvoted.Date = (new Date).getTime();
+            localStorage.setItem("GS_BC_RECORDS", JSON.stringify(records));
+        }
+   },
+   'handleListenerHistory': function(broadcast,listener)
+   {
+        var listeners = GS.getCurrentBroadcast().attributes.listenersCount;
+
+        //{ListenerCount: {Count : 0, Date : 0} , Upvoted: { Title: '', Count: 0, Date: 0}, Downvoted: { Title: '', Count: 0, Date: 0}}; 
+        if(records.ListenerCount.Count < listeners) {
+            if (!eventSilence && GUParams.announceRecordBreaking.toString() === 'true'
+                && records.ListenerCount.Date + (10*60*1000) < (new Date).getTime()) // gotta be at least 10 minutes ago
+                GU.sendMsg("Congrats everyone! This is now the most listeners we've had since the record was set on "+(new Date(records.Upvoted.Date)).toDateString()+". You can see all of our records by typing /records");
+            records.ListenerCount.Count = listeners;
+            records.ListenerCount.Date = (new Date).getTime();
+            localStorage.setItem("GS_BC_RECORDS", JSON.stringify(records));
+        }
+
    }
 };
-
-var clearIntv = setInterval(function(){
-	var listenerCount = $("#listener-count");
-	var downvoteCount = $(".downvotes");
-	var upvoteCount = $(".upvotes");
-	if(listenerCount.length && upvoteCount.length && downvoteCount.length){
-		listenerCount.bind("DOMSubtreeModified", function() {
-			var currentCount = parseInt(this.innerText);
-			
-			if(records.ListenerCount < currentCount){
-				records.ListenerCount = currentCount;			
-				localStorage.setItem("GS_BC_RECORDS", JSON.stringify(records));
-			}
-		});
-		
-		upvoteCount.bind("DOMSubtreeModified", function() {
-			if(!votelock)
-				upvoteCounter = parseInt(this.innerText);
-		});
-		
-		downvoteCount.bind("DOMSubtreeModified", function() {
-			if(!votelock)
-				downvoteCounter = parseInt(this.innerText);
-		});
-		clearInterval(clearIntv);
-	}
-}, 1000);
 
 chatHandlers = {
     // Will run all these handlers each time a message is recieved
@@ -916,11 +923,11 @@ actionTable = {
     'roll':                 [[GU.inBroadcast],                          GU.rollDice,             '- Roll a d100.'],
     'wa':                   [[GU.inBroadcast],                          GU.wolframAlpha,         '- Ask Wolfram|Alpha a question.'],
     'records':              [[GU.inBroadcast],                          GU.showRecords,          '- shows the Broadcasts Record Information'],
-    'startContest':			[[GU.inBroadcast, GU.guestOrWhite],			GU.startContest,		 '- starts a Contest'], 
-    'ballot':				[[GU.inBroadcast],							GU.ballot,		 		 '- enter yourself into a currently running contest'], 
-    'endContest':			[[GU.inBroadcast, GU.guestOrWhite],         GU.endContest,		 	 '- ends a Contest'],
+    'startContest':         [[GU.inBroadcast, GU.guestOrWhite],	        GU.startContest,         '- starts a Contest'], 
+    'ballot':               [[GU.inBroadcast],                          GU.ballot,               '- enter yourself into a currently running contest'], 
+    'endContest':           [[GU.inBroadcast, GU.guestOrWhite],         GU.endContest,           '- ends a Contest'],
     'setShoutout':          [[GU.inBroadcast, GU.guestOrWhite],         GU.setShoutout,          '- sets the Shoutout for the Broadcast'],
-    'eventSilence':         [[GU.inBroadcast, GU.guestOrWhite],        GU.toggleEvent,          '- will toggle the event mode. When enabled the random song selector will be disbaled and things like /roll and /wa will be silenced.'] 	
+    'eventSilence':         [[GU.inBroadcast, GU.guestOrWhite],         GU.toggleEvent,          '- will toggle the event mode. When enabled the random song selector will be disbaled and things like /roll and /wa will be silenced.'] 	
 };
 
 (function()
@@ -946,7 +953,11 @@ actionTable = {
             setTimeout(init_check, 100);
 			success = false;
         }
+        
 		records = localStorage.getItem("GS_BC_RECORDS") != undefined ? JSON.parse(localStorage.getItem("GS_BC_RECORDS")) : records;
+        if (typeof(records.version) == 'undefined' || records.version < 1)
+            records = {ListenerCount: {Count : 0, Date : 0} , Upvoted: { Title: '', Count: 0, Date: 0}, Downvoted: { Title: '', Count: 0, Date: 0},version:1}; // Looks like old version. sorry clear the old stats format.
+
 		timeSlots = JSON.parse(GUParams.Timeslot_Array) != undefined ? JSON.parse(GUParams.Timeslot_Array) : timeSlots;
 		
 		if(success){
