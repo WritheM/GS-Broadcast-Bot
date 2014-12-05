@@ -3,7 +3,8 @@
  
   $queryIsSet = isset($_REQUEST['q']);
   if ($queryIsSet) {
-    echo "Question: " . $_REQUEST['q']." | \n";;
+    $q = $_REQUEST['q'];
+    echo "Question: " . $q ." | \n";;
   } else {
     echo "invalid request, nothing passed";
     die();
@@ -11,8 +12,17 @@
 
   include 'wa_wrapper/WolframAlphaEngine.php';
   include 'config.php';
+  include 'easter.php';
 
   if (!$queryIsSet) die();
+
+  foreach ($hardBoiledEggs as $egg=>$yolk) {
+    if (strpos(strtolower($q),strtolower($egg)) !== false) {
+      echo "Interpretted as: {$egg} | \nAnswer: {$yolk}";
+      die();
+    }
+  }
+
 
   $qArgs = array();
   if (isset($_REQUEST['assumption']))
@@ -23,7 +33,7 @@
 
   // we will construct a basic query to the api with the input 'pi'
   // only the bare minimum will be used
-  $response = $engine->getResults( $_REQUEST['q'], $qArgs);
+  $response = $engine->getResults( $q, $qArgs);
 
   if ( $response->isError() ) {
     echo "Sorry looks like there was a problem with the query. Maybe we're out of queries this month?";
@@ -41,5 +51,12 @@ if (count($pods) > 0) {
 }
 else 
 {
-    echo "No Results found, or unable to parse your question.";
+    foreach ($softBoiledEggs as $egg=>$yolk) {
+      if (strpos(strtolower($q),strtolower($egg)) !== false) {
+        echo "Interpretted as: {$egg} | \nAnswer: {$yolk}";
+        die();
+      }
     }
+
+    echo "No Results found, or unable to parse your question.";
+}
