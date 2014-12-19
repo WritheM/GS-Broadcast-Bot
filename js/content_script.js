@@ -519,15 +519,20 @@ var GU = {
             return;
         if (Grooveshark.getPreviousSong() != null && GUParams.MySQLPHPUrl.length > 0)
         { // history logging to mysql db.
-            var prevSong = Grooveshark.getPreviousSong();
-            setTimeout(function() 
-            {
-                prevSong.history = GS.getCurrentBroadcast().attributes.history.models[0].attributes;
-                prevSong.userID = GS.getCurrentBroadcast().attributes.UserID;
-                $.post(GUParams.MySQLPHPUrl, JSON.stringify(prevSong), function( data ) {
-                    if (data.length > 5) GU.sendMsg(data);
-                });
-            },2000);
+            try {
+                var prevSong = Grooveshark.getPreviousSong();
+                setTimeout(function() 
+                {
+                    prevSong.history = GS.getCurrentBroadcast().attributes.history.models[0].attributes;
+                    prevSong.userID = GS.getCurrentBroadcast().attributes.UserID;
+                    $.post(GUParams.MySQLPHPUrl, JSON.stringify(prevSong), function( data ) {
+                        if (data.length > 5) GU.sendMsg(data);
+                    });
+                },2000);
+            }
+            catch (ex) {
+                // die silent death silently dead shhh
+            }
         }
         var currSongID = Grooveshark.getCurrentSongStatus().song.songID;
         if (lastPlayedSongs.length == 0 || lastPlayedSongs[lastPlayedSongs.length - 1] != currSongID)
