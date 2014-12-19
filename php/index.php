@@ -29,7 +29,7 @@
     $qArgs['assumption'] = $_REQUEST['assumption'];
 
   // instantiate an engine object with your app id
-  $engine = new WolframAlphaEngine( $config['appID'] );
+  $engine = new WolframAlphaEngine( $cfg['wolfram']['appID'] );
 
   // we will construct a basic query to the api with the input 'pi'
   // only the bare minimum will be used

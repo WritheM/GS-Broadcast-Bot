@@ -54,6 +54,7 @@ var defValue = [
 	['ShoutOutInterval', 'The interval of your shoutout message, the message will be sent once every x minutes.', '50'],
 	['ShoutOutMessage', 'The message to send for your shoutout -- If blank no shoutout will be used', ''],
 	['WolframPHPUrl', 'The plugin comes with a php script, this is the location of the webserver that hosts that php.', ''],
+	['MySQLPHPUrl', 'This is the gsdb.php script, this is the location of the webserver that hosts that php. This is used to store indepth broadcast details in a db. Not for the feint of heart.', ''],
 	['announceRecordBreaking', 'Should we announce every time we break a record? This could get really annoying if you have a new bot in a big broadcast for the first time.', false],
 ];
 
