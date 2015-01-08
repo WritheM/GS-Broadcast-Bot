@@ -767,6 +767,25 @@ var GU = {
             });
         }
 	},
+  'songStats': function(current)
+	{
+        if (GUParams.MySQLPHPUrl.length > 0  
+            && (!eventSilence || GU.guestOrWhite(current.userID))) // is guest
+        {
+            if (current.data.length <= 6 && Grooveshark.getCurrentSongStatus().song == null)
+                return;
+                
+            var currSongID = Grooveshark.getCurrentSongStatus().song.songID;
+            var songID = current.data.substr(7);
+            if (songID.length < 1)
+                songID = currSongID;
+            var userID = GS.getCurrentBroadcast().attributes.UserID;
+
+            $.post(GUParams.MySQLPHPUrl+"?songid="+encodeURIComponent(songID)+"&userid="+encodeURIComponent(userID),function( data ) {
+                GU.sendMsg(data);
+            });
+        }
+	},
   'showRecords': function(current)
 	{
         if (!eventSilence || GU.guestOrWhite(current.userID)) // is guest
@@ -963,6 +982,7 @@ actionTable = {
     'about':                [[GU.inBroadcast],                          GU.about,                '- About this software.'],
     'roll':                 [[GU.inBroadcast],                          GU.rollDice,             '- Roll a d100.'],
     'wa':                   [[GU.inBroadcast],                          GU.wolframAlpha,         '- Ask Wolfram|Alpha a question.'],
+    'stats':                [[GU.inBroadcast],                          GU.songStats,            '- Check the db history of votes for the currently playing song.'],
     'records':              [[GU.inBroadcast],                          GU.showRecords,          '- shows the Broadcasts Record Information'],
     'startContest':         [[GU.inBroadcast, GU.guestOrWhite],	        GU.startContest,         '- starts a Contest'], 
     'ballot':               [[GU.inBroadcast],                          GU.ballot,               '- enter yourself into a currently running contest'], 
