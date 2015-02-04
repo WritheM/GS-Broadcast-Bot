@@ -97,6 +97,17 @@ var GU = {
          if ($('.icon-sidebar-open-m-gray')[0])
             $('.icon-sidebar-open-m-gray').click()
     },
+    'getBroadcastAttribute': function (attrName) {
+		 var attributes = GS.getCurrentBroadcast().attributes;
+		 if (attributes == undefined)
+			 return;
+		 try {
+			 return eval("attributes." + attrName);
+		 }catch (e){
+			 return;
+			 console.error(e.message);
+		 }
+	 },
  'renameBroadcast': function(bdcName)
     {
         var attributes = GS.getCurrentBroadcast().attributes;
